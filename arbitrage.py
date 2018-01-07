@@ -73,24 +73,28 @@ class Arbitrage:
 
 
 
-    def bestRate(self):
+    def bestRate(self, rates):
        
         lowestBuy = 0
         highestSell = 0
 
-        for i in range(len(self.rates)):
+
+        print("Exchange    |    Lowest Ask (Buy)    |    Highest Bid (Sell)")
+
+        for i in range(len(rates)):
+            print(rates[i][2], "   |    ", rates[i][0], "   |    ", rates[i][1])
             if (rates[i][0] < rates[lowestBuy][0]):
                     lowestBuy = i
 
             if (rates[i][1] > rates[highestSell][1]):
                     highestSell = i
 
-        gain = (float(rates[highestSell][1]) - float(rates[lowestBuy][0])) / float(rates[lowestBuy][0])
+        gain = 100 * (float(rates[highestSell][1]) - float(rates[lowestBuy][0])) / float(rates[lowestBuy][0])
 
-        buyAt = rates[lowestBuy][3]
-        sellAt = rates[highestSell][3]
+        buyAt = rates[lowestBuy][2]
+        sellAt = rates[highestSell][2]
 
-        print(gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
+        print('\n', gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
 
 
 
@@ -106,8 +110,7 @@ class Arbitrage:
         #rates.append(self.getBitfinex(conversion))
 
         #Compute
-        #self.bestRate()
+        self.bestRate(rates)
 
-
-
-Arbitrage()
+while(True):
+    Arbitrage()
