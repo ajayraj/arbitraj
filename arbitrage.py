@@ -1,4 +1,4 @@
-import requests, json, itertools
+import requests, json, itertools, bisect
 
 #Class builds lists of rates, next build nonce checker and chron job, automatic trade executor and transaction calculator around below class
 
@@ -91,25 +91,35 @@ class Arbitrage:
 
         print("{0:^20s}|{1:^20s}|{2:^20s}".format("Exchange:", "Lowest Ask (Buy):", "Highest Bid (Sell):"))
 
+
         for i in range(len(rates)):
+
             for j in range(len(rates)):
+
                 if i != j:
-                    gains_tup = (rates[i][2], rates[j][2], 100 * (float(rates[j][1]) - float(rates[i][0])) / float(rates[i][0]))
-                    gains.append(gains_tup)
+
+                    gains_tup = (100 * (float(rates[j][1]) - float(rates[i][0])) / float(rates[i][0]), rates[i][2], rates[j][2])    #Tup:(percentage gain, exchange to buy at, exchange to sell at)
+                    bisect.insort(gains, gains_tup)
+
 
             print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
+
+
             if (rates[i][0] < rates[lowestBuy][0]):
                     lowestBuy = i
+
 
             if (rates[i][1] > rates[highestSell][1]):
                     highestSell = i
 
-        gain = 100 * (float(rates[highestSell][1]) - float(rates[lowestBuy][0])) / float(rates[lowestBuy][0])
 
+        gain = 100 * (float(rates[highestSell][1]) - float(rates[lowestBuy][0])) / float(rates[lowestBuy][0])
+        
+        gains.reverse()     #Better table format
         print("\n{0:^20s}|{1:^20s}|{2:^20s}".format("Buy At:", "Sell At:", "% Gain:"))
 
         for i in range(len(gains)):
-            print("{0:^20s}|{1:^20s}|{2:^20.4f}".format(gains[i][0], gains[i][1], gains[i][2]))
+            print("{1:^20s}|{2:^20s}|{0:^20.4f}".format(gains[i][0], gains[i][1], gains[i][2]))
 
         buyAt = rates[lowestBuy][2]
         sellAt = rates[highestSell][2]
