@@ -6,8 +6,6 @@ class Arbitrage:
 
     rates = None
 
-
-
     def getCoinbase(self, conversion):
         url = "https://api.coinbase.com/v2/prices/"
         r = requests.get(url + conversion + "/buy")  #Coinbase BTC-USD
@@ -69,6 +67,7 @@ class Arbitrage:
 
         return (buy_price, sell_price, "Bitfinex")
 
+
     def getExmo(self, conversion):
         url = "https://api.exmo.com/v1/order_book/?pair="
 
@@ -80,12 +79,25 @@ class Arbitrage:
 
         return (buy_price, sell_price, "Exmo")
 
+    
+    def getCoinroom(self, conversion):
+        url = "https://coinroom.com/api/ticker/"
+
+        convformat = conversion.replace('-', '/')
+
+        r = requests.get(url + convformat).json()
+
+        buy_price = r["ask"]
+        sell_price = r["bid"]
+
+        print(buy_price)
+        print(sell_price)
+
+        return (buy_price, sell_price, "Coinroom")
 
 
     def bestRate(self, rates):
        
-        lowestBuy = 0
-        highestSell = 0
         gains = list()
 
 
@@ -104,25 +116,17 @@ class Arbitrage:
 
             print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
 
-
-            if (rates[i][0] < rates[lowestBuy][0]):
-                    lowestBuy = i
-
-
-            if (rates[i][1] > rates[highestSell][1]):
-                    highestSell = i
-
-
-        gain = 100 * (float(rates[highestSell][1]) - float(rates[lowestBuy][0])) / float(rates[lowestBuy][0])
         
         gains.reverse()     #Better table format
+        gain = gains[0][0]
+
         print("\n{0:^20s}|{1:^20s}|{2:^20s}".format("Buy At:", "Sell At:", "% Gain:"))
 
         for i in range(len(gains)):
             print("{1:^20s}|{2:^20s}|{0:^20.4f}".format(gains[i][0], gains[i][1], gains[i][2]))
 
-        buyAt = rates[lowestBuy][2]
-        sellAt = rates[highestSell][2]
+        buyAt = gains[0][1]
+        sellAt = gains[0][2]
 
         print('\n', gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
 
@@ -137,7 +141,9 @@ class Arbitrage:
         rates.append(self.getKraken(conversion))
         rates.append(self.getExmo(conversion))
         rates.append(self.getBitfinex(conversion))
-        #self.getBitfinex(conversion)
+        rates.append(self.getCoinroom(conversion))
+        #self.getCoinroom(conversion)
+
 
         #Compute
         print(rates)
