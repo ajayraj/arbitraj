@@ -9,10 +9,9 @@ class Arbitrage:
     def getCoinbase(self, conversion):
         url = "https://api.coinbase.com/v2/prices/"
         r = requests.get(url + conversion + "/buy")  #Coinbase BTC-USD
-        print(conversion)
+
         if (r.status_code != requests.codes.ok):
-            print("Requests error: ", r.status_code)
-            exit()
+            return ("---", "---", "Coinbase")
         
         r = r.json()
     
@@ -21,8 +20,7 @@ class Arbitrage:
         r = requests.get(url + conversion + "/sell")
 
         if (r.status_code != requests.codes.ok):
-            print("Requests error: ". r.status_code)
-            exit()
+            return ("---", "---", "Coinbase")
 
         r = r.json()
 
@@ -42,11 +40,12 @@ class Arbitrage:
         r = requests.get(url, params)
 
         if (r.status_code != requests.codes.ok):
-            print("Requests error: ", r.status_code)
-            exit()
-
+            return ("---", "---", "Kraken")
 
         r = r.json()
+
+        if len(r["error"]) != 0:
+            return ("---", "---", "Kraken")
 
         pairname = list(r["result"])[0]
         buy_price = r["result"][pairname]['a'][0]
@@ -60,7 +59,12 @@ class Arbitrage:
 
         convformat = conversion.replace('-', '')
 
-        r = requests.get(url + convformat).json()
+        r = requests.get(url + convformat)
+        
+        if (r.status_code != requests.codes.ok):
+            return ("---", "---", "Bitfinex")
+
+        r = r.json()
         
         buy_price = r["ask"]
         sell_price = r["bid"]
@@ -72,8 +76,14 @@ class Arbitrage:
         url = "https://api.exmo.com/v1/order_book/?pair="
 
         convformat = conversion.replace('-', '_')
-        r = requests.get(url + convformat).json()
+        r = requests.get(url + convformat)
 
+        
+        if (r.status_code != requests.codes.ok or len(r.json()) == 0):
+            return ("---", "---", "Exmo")
+
+        r = r.json()
+        
         buy_price = r[convformat]["ask_top"]
         sell_price = r[convformat]["bid_top"]
 
@@ -85,13 +95,19 @@ class Arbitrage:
 
         convformat = conversion.replace('-', '/')
 
-        r = requests.get(url + convformat).json()
+        r = requests.get(url + convformat)
+
+        if (r.status_code != requests.codes.ok or len(r.json()) == 0):
+            return ("---", "---", "Coinroom")
+
+
+        r = r.json()
 
         buy_price = r["ask"]
         sell_price = r["bid"]
 
-        print(buy_price)
-        print(sell_price)
+        if buy_price == 0 or sell_price == 0:
+            return ("---", "---", "Coinroom")
 
         return (buy_price, sell_price, "Coinroom")
 
@@ -105,19 +121,23 @@ class Arbitrage:
 
 
         for i in range(len(rates)):
+            if rates[i][0] != "---":
 
-            for j in range(len(rates)):
-
-                if i != j:
-
-                    gains_tup = (100 * (float(rates[j][1]) - float(rates[i][0])) / float(rates[i][0]), rates[i][2], rates[j][2])    #Tup:(percentage gain, exchange to buy at, exchange to sell at)
-                    bisect.insort(gains, gains_tup)
+                for j in range(len(rates)):
+                    if i != j and rates[j][0] != "---":
+                        gains_tup = (100 * (float(rates[j][1]) - float(rates[i][0])) / float(rates[i][0]), rates[i][2], rates[j][2])    #Tup:(percentage gain, exchange to buy at, exchange to sell at)
+                        bisect.insort(gains, gains_tup)
 
 
-            print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
+                print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
 
         
         gains.reverse()     #Better table format
+
+        if len(gains) < 2:
+            print("Arbitrage not possible; try another currency pair.")
+            return
+
         gain = gains[0][0]
 
         print("\n{0:^20s}|{1:^20s}|{2:^20s}".format("Buy At:", "Sell At:", "% Gain:"))
@@ -131,6 +151,9 @@ class Arbitrage:
         print('\n', gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
 
 
+    #def printRates(self, rates, gains):
+
+
 
     def __init__(self):
         rates = list()
@@ -142,7 +165,6 @@ class Arbitrage:
         rates.append(self.getExmo(conversion))
         rates.append(self.getBitfinex(conversion))
         rates.append(self.getCoinroom(conversion))
-        #self.getCoinroom(conversion)
 
 
         #Compute
