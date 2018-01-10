@@ -87,6 +87,9 @@ class Arbitrage:
         buy_price = r[convformat]["ask_top"]
         sell_price = r[convformat]["bid_top"]
 
+        if buy_price == 0 or sell_price == 0:
+            return ("---", "---", "Exmo")
+
         return (buy_price, sell_price, "Exmo")
 
     
