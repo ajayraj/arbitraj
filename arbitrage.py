@@ -131,47 +131,51 @@ class Arbitrage:
 
         return (buy_price, sell_price, "HitBTC")
 
+    
     def bestRate(self, rates):
        
         gains = list()
-
-
-        print("{0:^20s}|{1:^20s}|{2:^20s}".format("Exchange:", "Lowest Ask (Buy):", "Highest Bid (Sell):"))
-
 
         for i in range(len(rates)):
             if rates[i][0] != "---":
 
                 for j in range(len(rates)):
+                    
                     if i != j and rates[j][0] != "---":
+                        
                         gains_tup = (100 * (float(rates[j][1]) - float(rates[i][0])) / float(rates[i][0]), rates[i][2], rates[j][2])    #Tup:(percentage gain, exchange to buy at, exchange to sell at)
                         bisect.insort(gains, gains_tup)
-
-
-                print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
-
         
         gains.reverse()     #Better table format
+       
+        return (rates, gains)
 
+    
+    def printRates(self, rates, gains):
+        #Potential Check
         if len(gains) < 2:
             print("Arbitrage not possible; try another currency pair.")
             return
 
-        gain = gains[0][0]
+        #Rates Table
+        print("{0:^20s}|{1:^20s}|{2:^20s}".format("Exchange:", "Lowest Ask (Buy):", "Highest Bid (Sell):"))
 
+        for i in range(len(rates)):
+                print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
+
+
+        #Gains Table
         print("\n{0:^20s}|{1:^20s}|{2:^20s}".format("Buy At:", "Sell At:", "% Gain:"))
-
+        
         for i in range(len(gains)):
             print("{1:^20s}|{2:^20s}|{0:^20.4f}".format(gains[i][0], gains[i][1], gains[i][2]))
 
+        #Best Viable Trade
+        gain = gains[0][0]
         buyAt = gains[0][1]
         sellAt = gains[0][2]
 
         print('\n', gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
-
-
-    #def printRates(self, rates, gains):
-
 
 
     def __init__(self):
@@ -189,7 +193,9 @@ class Arbitrage:
 
         #Compute
         print(rates)
-        self.bestRate(rates)
+        result_tup = self.bestRate(rates)
+
+        self.printRates(result_tup[0], result_tup[1])
 
 while(True):
     Arbitrage()
