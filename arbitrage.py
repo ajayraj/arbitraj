@@ -111,6 +111,22 @@ class Arbitrage:
 
         return (buy_price, sell_price, "Coinroom")
 
+    def getHitBTC(self, conversion):
+        url = "https://api.hitbtc.com/api/2/public/ticker/"
+        
+        convformat = conversion.replace('-', '')
+
+        r = requests.get(url + convformat)
+
+        if (r.status_code != requests.codes.ok):
+            return ("---", "---", "HitBTC")
+
+        r = r.json()
+
+        buy_price = r["ask"]
+        sell_price = r["bid"]
+
+        return (buy_price, sell_price, "HitBTC")
 
     def bestRate(self, rates):
        
@@ -165,6 +181,7 @@ class Arbitrage:
         rates.append(self.getExmo(conversion))
         rates.append(self.getBitfinex(conversion))
         rates.append(self.getCoinroom(conversion))
+        rates.append(self.getHitBTC(conversion))
 
 
         #Compute
