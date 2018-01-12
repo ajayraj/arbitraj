@@ -161,6 +161,7 @@ class Arbitrage:
         print("{0:^20s}|{1:^20s}|{2:^20s}".format("Exchange:", "Lowest Ask (Buy):", "Highest Bid (Sell):"))
 
         for i in range(len(rates)):
+            if rates[i][0] != "---":
                 print("{0:^20s}|{1:^20.6f}|{2:^20.6f}".format(rates[i][2], float(rates[i][0]), float(rates[i][1])))
 
 
