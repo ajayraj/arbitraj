@@ -148,7 +148,7 @@ class Arbitrage:
         
         gains.reverse()     #Better table format
        
-        return (rates, gains)
+        return (gains)
 
     
     def printRates(self, rates, gains):
@@ -178,11 +178,43 @@ class Arbitrage:
 
         print('\n', gain, "% gain | Buy: ", buyAt, " | Sell: ", sellAt)
 
+    def trade_path(self, com):
+        #Parses input as space separated values, last input is an optional trading value
+        
+        if not any(char.isdigit() for char in com):
+            com += " 1"
+
+        com_dup = com.split()
+        records = []
+
+        for i in range(len(com_dup) - 1):
+            print(i, "/", len(com_dup ))
+            if i == len(com_dup) - 2:
+                print(com_dup[0], com_dup[i])
+                records.append(self.getHitBTC(com_dup[0] + com_dup[i]))
+            
+            else:
+                print(com_dup[i], com_dup[i + 1])
+                records.append(self.getHitBTC(com_dup[i] + com_dup[i + 1]))
+
+        change = float(com_dup[-1])
+
+        for i in records:
+            if i != records[-1]:
+                change *= float(i[1])
+
+            else:
+                change /= float(i[0])
+
+        print("Ending amount: ", change)
+
 
     def __init__(self):
         rates = list()
         
         conversion = input("Enter currencies to exchange (ex. BTC-USD): ")
+        self.trade_path(conversion)
+        return
         #Build list of exchange rates
         rates.append(self.getCoinbase(conversion))
         rates.append(self.getKraken(conversion))
@@ -194,9 +226,9 @@ class Arbitrage:
 
         #Compute
         print(rates)
-        result_tup = self.bestRate(rates)
+        gains = self.bestRate(rates)
 
-        self.printRates(result_tup[0], result_tup[1])
+        self.printRates(rates, gains)
 
 while(True):
     Arbitrage()
